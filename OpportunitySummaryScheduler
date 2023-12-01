@@ -1,0 +1,8 @@
+global class OpportunitySummaryScheduler implements Schedulable {
+
+    global void execute(SchedulableContext sc) {
+        // Call the batch class from the schedulable class
+        OpportunitySummaryBatch batchJob = new OpportunitySummaryBatch();
+        Database.executeBatch(batchJob);
+    }
+}

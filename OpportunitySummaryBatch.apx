@@ -1,0 +1,44 @@
+global class OpportunitySummaryBatch implements Database.Batchable<sObject>, Database.Stateful {
+
+    global Database.QueryLocator start(Database.BatchableContext BC) {
+        // Query to get the necessary data for the batch
+        String query = 'SELECT AccountId, Account.Name, Type, Amount FROM Opportunity WHERE CreatedDate = THIS_MONTH OR LastModifiedDate = THIS_MONTH';
+        return Database.getQueryLocator(query);
+    }
+
+    global void execute(Database.BatchableContext BC, List<Opportunity> scope) {
+        // Logic to summarize opportunity amounts
+        Map<Id, List<Opportunity>> opportunitiesByAccount = new Map<Id, List<Opportunity>>();
+        for (Opportunity opp : scope) {
+            if (!opportunitiesByAccount.containsKey(opp.AccountId)) {
+                opportunitiesByAccount.put(opp.AccountId, new List<Opportunity>());
+            }
+            opportunitiesByAccount.get(opp.AccountId).add(opp);
+        }
+
+        // Logic to send emails
+        for (Id accountId : opportunitiesByAccount.keySet()) {
+            List<Opportunity> opportunities = opportunitiesByAccount.get(accountId);
+            List<Opportunity> closedWon = new List<Opportunity>();
+            List<Opportunity> open = new List<Opportunity>();
+            List<Opportunity> closedLost = new List<Opportunity>();
+
+            for (Opportunity opp : opportunities) {
+                if (opp.StageName == 'Closed Won') {
+                    closedWon.add(opp);
+                } else if (opp.StageName == 'Closed Lost') {
+                    closedLost.add(opp);
+                } else {
+                    open.add(opp);
+                }
+            }
+
+            // Send email with summarized opportunity amounts
+            OpportunitySummaryEmailService.sendOpportunitySummaryEmail(accountId, closedWon, open, closedLost);
+        }
+    }
+
+    global void finish(Database.BatchableContext BC) {
+        // Any cleanup or post-processing logic can go here
+    }
+}

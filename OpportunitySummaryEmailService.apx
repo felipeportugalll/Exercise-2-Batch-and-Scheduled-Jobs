@@ -1,0 +1,43 @@
+public class OpportunitySummaryEmailService {
+
+    public static void sendOpportunitySummaryEmail(Id accountId, List<Opportunity> closedWon, List<Opportunity> open, List<Opportunity> closedLost) {
+        // Logic to send an email with the summarized opportunity amounts
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        email.setToAddresses(new String[]{getPrimaryContactEmail(accountId)}); // Update with your logic to get primary contact email
+        email.setSubject('Monthly Opportunity Summary');
+
+        String emailBody = 'Dear Customer, \n\n';
+        emailBody += 'Here is the summary of opportunities for the month:\n\n';
+
+        emailBody += '<b>Closed Won Opportunities:</b><br>';
+        emailBody += createOpportunityTable(closedWon);
+
+        emailBody += '<b>Open Opportunities:</b><br>';
+        emailBody += createOpportunityTable(open);
+
+        emailBody += '<b>Closed Lost Opportunities:</b><br>';
+        emailBody += createOpportunityTable(closedLost);
+
+        email.setHtmlBody(emailBody);
+
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[]{email});
+    }
+
+    private static String createOpportunityTable(List<Opportunity> opportunities) {
+        String table = '<table border="1"><tr><th>Opportunity Name</th><th>Amount</th></tr>';
+
+        for (Opportunity opp : opportunities) {
+            table += '<tr><td>' + opp.Name + '</td><td>' + String.valueOf(opp.Amount) + '</td></tr>';
+        }
+
+        table += '</table>';
+        return table;
+    }
+
+    private static String getPrimaryContactEmail(Id accountId) {
+        // Implement your logic to get the primary contact's email for the account
+        // For example, you might query the Contact associated with the Account and retrieve the email.
+        // Replace this with your actual logic.
+        return 'test@example.com';
+    }
+}
